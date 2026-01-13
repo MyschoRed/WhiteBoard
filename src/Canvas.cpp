@@ -5,17 +5,17 @@
 Canvas::Canvas(int width, int height) : width(width), height(height) {
     renderTexture = LoadRenderTexture(width, height);
 
-    // Inicializuj s ciernym pozadim
+    // Initialize with black background
     BeginTextureMode(renderTexture);
     ClearBackground(BLACK);
     EndTextureMode();
 
-    // Uloz pociatocny stav
+    // Save initial state
     SaveState();
 }
 
 Canvas::~Canvas() {
-    // Uvolni vsetky obrazky v historii
+    // Unload all images in history
     for (auto& img : undoStack) {
         UnloadImage(img);
     }
@@ -42,22 +42,22 @@ void Canvas::EndDrawing() {
 void Canvas::DrawPencilLine(Vector2 start, Vector2 end, Color color, float thickness) {
     BeginTextureMode(renderTexture);
 
-    // Vypocitaj vzdialenost medzi bodmi
+    // Calculate distance between points
     float dx = end.x - start.x;
     float dy = end.y - start.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    // Polomer kruhu (thickness je priemer)
+    // Circle radius (thickness is diameter)
     float radius = thickness / 2.0f;
 
-    // Krok medzi kruhmi - mensie hodnoty = hustejsie kruhy
+    // Step between circles - smaller values = denser circles
     float step = std::max(1.0f, radius * 0.3f);
 
     if (distance < step) {
-        // Ak je vzdialenost mala, nakresli jeden kruh
+        // If distance is small, draw single circle
         DrawCircleV(end, radius, color);
     } else {
-        // Interpoluj kruhy medzi start a end
+        // Interpolate circles between start and end
         int steps = (int)(distance / step);
         for (int i = 0; i <= steps; i++) {
             float t = (float)i / (float)steps;
@@ -100,9 +100,9 @@ void Canvas::DrawCircleShape(Vector2 center, float radius, Color color, bool fil
 void Canvas::SaveState() {
     ClearRedoStack();
 
-    // Ziskaj aktualny obrazok z renderTexture
+    // Get current image from renderTexture
     Image img = LoadImageFromTexture(renderTexture.texture);
-    ImageFlipVertical(&img); // RenderTexture je prevrateny
+    ImageFlipVertical(&img); // RenderTexture is flipped
     undoStack.push_back(img);
 
     TrimUndoStack();
@@ -111,18 +111,18 @@ void Canvas::SaveState() {
 void Canvas::Undo() {
     if (!CanUndo()) return;
 
-    // Aktualny stav presun do redo stacku
+    // Move current state to redo stack
     Image currentImg = LoadImageFromTexture(renderTexture.texture);
     ImageFlipVertical(&currentImg);
     redoStack.push_back(currentImg);
 
-    // Odstran posledny stav z undo stacku
+    // Remove last state from undo stack
     undoStack.pop_back();
 
-    // Obnov predchadzajuci stav
+    // Restore previous state
     if (!undoStack.empty()) {
         Image prevImg = ImageCopy(undoStack.back());
-        ImageFlipVertical(&prevImg); // Flip pre renderTexture
+        ImageFlipVertical(&prevImg); // Flip for renderTexture
         Texture2D tempTex = LoadTextureFromImage(prevImg);
 
         BeginTextureMode(renderTexture);
@@ -133,12 +133,12 @@ void Canvas::Undo() {
         UnloadTexture(tempTex);
         UnloadImage(prevImg);
     } else {
-        // Ak je stack prazdny, vycisti canvas
+        // If stack is empty, clear canvas
         BeginTextureMode(renderTexture);
         ClearBackground(BLACK);
         EndTextureMode();
 
-        // Pridaj prazdny stav
+        // Add empty state
         SaveState();
     }
 }
@@ -146,14 +146,14 @@ void Canvas::Undo() {
 void Canvas::Redo() {
     if (!CanRedo()) return;
 
-    // Ziskaj stav z redo stacku
+    // Get state from redo stack
     Image redoImg = redoStack.back();
     redoStack.pop_back();
 
-    // Uloz aktualny stav do undo stacku
+    // Save current state to undo stack
     undoStack.push_back(ImageCopy(redoImg));
 
-    // Obnov stav
+    // Restore state
     ImageFlipVertical(&redoImg);
     Texture2D tempTex = LoadTextureFromImage(redoImg);
 
@@ -167,7 +167,7 @@ void Canvas::Redo() {
 }
 
 bool Canvas::CanUndo() const {
-    return undoStack.size() > 1; // Vzdy ponechaj aspon jeden stav
+    return undoStack.size() > 1; // Always keep at least one state
 }
 
 bool Canvas::CanRedo() const {
@@ -187,7 +187,7 @@ void Canvas::LoadFromPNG(const char* filename) {
     Image img = LoadImage(filename);
     if (img.data == nullptr) return;
 
-    // Zmen velkost ak treba
+    // Resize if needed
     if (img.width != width || img.height != height) {
         ImageResize(&img, width, height);
     }
@@ -210,15 +210,15 @@ void Canvas::Resize(int newWidth, int newHeight) {
     if (newWidth == width && newHeight == height) return;
     if (newWidth <= 0 || newHeight <= 0) return;
 
-    // Uloz aktualny obsah
+    // Save current content
     Image currentImg = LoadImageFromTexture(renderTexture.texture);
     ImageFlipVertical(&currentImg);
 
-    // Vytvor novu renderTexture
+    // Create new renderTexture
     UnloadRenderTexture(renderTexture);
     renderTexture = LoadRenderTexture(newWidth, newHeight);
 
-    // Prekresli stary obsah do novej renderTexture
+    // Redraw old content to new renderTexture
     ImageFlipVertical(&currentImg);
     Texture2D tempTex = LoadTextureFromImage(currentImg);
 

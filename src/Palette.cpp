@@ -1,7 +1,7 @@
 #include "Palette.h"
 
 Palette::Palette() : currentIndex(0) {
-    // 5 farieb: biela, cervena, zelena, modra, zlta
+    // 5 colors: white, red, green, blue, yellow
     colors[0] = WHITE;
     colors[1] = RED;
     colors[2] = GREEN;

@@ -11,4 +11,7 @@ build/
 WhiteBoard
 
 # Saved images
-*.png
+whiteboard*.png
+
+# Keep screenshot for README
+!screenshot.png

@@ -21,42 +21,42 @@ public:
     void Run();
 
 private:
-    // Okno
+    // Window
     int windowWidth;
     int windowHeight;
 
-    // Komponenty
+    // Components
     std::unique_ptr<Canvas> canvas;
     Palette palette;
 
-    // Nastroje
+    // Tools
     Tool currentTool;
     float brushSize;
     bool fillShapes;
 
-    // Stav kreslenia
+    // Drawing state
     bool isDrawing;
     Vector2 startPos;
     Vector2 lastPos;
     Vector2 currentPos;
 
-    // GUI rozmery
+    // GUI dimensions
     static constexpr int MENU_WIDTH = 120;
     static constexpr int BUTTON_HEIGHT = 30;
     static constexpr int BUTTON_PADDING = 5;
     static constexpr int COLOR_BTN_SIZE = 30;
 
-    // Metody
+    // Methods
     void Update();
     void Draw();
     void DrawGUI();
     void HandleInput();
 
-    // Pomocne
+    // Helpers
     bool IsMouseOnCanvas() const;
     Vector2 GetCanvasMousePos() const;
 
-    // File dialog pomocne
+    // File dialog helpers
     std::string saveFilename;
     std::string loadFilename;
     bool showSaveDialog;

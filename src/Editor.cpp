@@ -34,12 +34,12 @@ Editor::Editor(int windowWidth, int windowHeight)
     InitWindow(windowWidth, windowHeight, "WhiteBoard");
     SetTargetFPS(60);
 
-    // Canvas velkost = okno minus menu
+    // Canvas size = window minus menu
     int canvasWidth = windowWidth - MENU_WIDTH;
     int canvasHeight = windowHeight;
     canvas = std::make_unique<Canvas>(canvasWidth, canvasHeight);
 
-    // Nastavenie GUI stylu
+    // Set GUI style
     GuiSetStyle(DEFAULT, TEXT_SIZE, 14);
 }
 
@@ -55,7 +55,7 @@ void Editor::Run() {
 }
 
 void Editor::Update() {
-    // Aktualizuj rozmery okna ak sa zmenili
+    // Update window dimensions if changed
     int newWidth = GetScreenWidth();
     int newHeight = GetScreenHeight();
 
@@ -69,7 +69,7 @@ void Editor::Update() {
         canvas->Resize(canvasWidth, canvasHeight);
     }
 
-    // Skry kurzor iba pri aktivnom kresleni
+    // Hide cursor only when actively drawing
     if (isDrawing && IsMouseOnCanvas()) {
         HideCursor();
     } else {
@@ -83,17 +83,17 @@ void Editor::Draw() {
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
-    // Vykresli canvas (posunuty o sirku menu)
+    // Draw canvas (offset by menu width)
     Texture2D canvasTex = canvas->GetTexture();
-    // RenderTexture je prevrateny, potrebujeme ho vykreslit spravne
+    // RenderTexture is flipped, we need to draw it correctly
     Rectangle source = { 0, 0, (float)canvasTex.width, -(float)canvasTex.height };
     Rectangle dest = { (float)MENU_WIDTH, 0, (float)canvasTex.width, (float)canvasTex.height };
     DrawTexturePro(canvasTex, source, dest, {0, 0}, 0, WHITE);
 
-    // Preview pri kresleni tvarov
+    // Preview when drawing shapes
     if (isDrawing && (currentTool == Tool::RECTANGLE || currentTool == Tool::CIRCLE)) {
         Color previewColor = palette.GetCurrentColor();
-        previewColor.a = 128; // Polpriehladna
+        previewColor.a = 128; // Semi-transparent
 
         if (currentTool == Tool::RECTANGLE) {
             float x = std::min(startPos.x, currentPos.x);
@@ -120,20 +120,20 @@ void Editor::Draw() {
         }
     }
 
-    // GUI na lavej strane
+    // GUI on left side
     DrawGUI();
 
     EndDrawing();
 }
 
 void Editor::DrawGUI() {
-    // Pozadie menu
+    // Menu background
     DrawRectangle(0, 0, MENU_WIDTH, windowHeight, LIGHTGRAY);
 
     int yPos = BUTTON_PADDING;
 
-    // === NASTROJE ===
-    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "NASTROJE");
+    // === TOOLS ===
+    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "TOOLS");
     yPos += 25;
 
     // Pencil
@@ -164,7 +164,7 @@ void Editor::DrawGUI() {
     }
     yPos += BUTTON_HEIGHT + BUTTON_PADDING;
 
-    // Fill checkbox (len pre tvary)
+    // Fill checkbox (only for shapes)
     GuiCheckBox({(float)BUTTON_PADDING, (float)yPos, 20, 20}, "Fill shapes", &fillShapes);
     yPos += 30;
 
@@ -172,25 +172,25 @@ void Editor::DrawGUI() {
     DrawLine(BUTTON_PADDING, yPos, MENU_WIDTH - BUTTON_PADDING, yPos, GRAY);
     yPos += 10;
 
-    // === FARBY ===
-    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "FARBY");
+    // === COLORS ===
+    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "COLORS");
     yPos += 25;
 
-    // Paleta farieb (horizontalne)
+    // Color palette (horizontal)
     const auto& colors = palette.GetColors();
     int colorX = BUTTON_PADDING;
     for (int i = 0; i < Palette::COLOR_COUNT; i++) {
         Rectangle colorBtn = {(float)colorX, (float)yPos, (float)COLOR_BTN_SIZE, (float)COLOR_BTN_SIZE};
         DrawRectangleRec(colorBtn, colors[i]);
 
-        // Oramovanie pre vybranu farbu
+        // Border for selected color
         if (i == palette.GetCurrentIndex()) {
             DrawRectangleLinesEx(colorBtn, 3, BLACK);
         } else {
             DrawRectangleLinesEx(colorBtn, 1, DARKGRAY);
         }
 
-        // Kliknutie na farbu
+        // Click on color
         if (CheckCollisionPointRec(GetMousePosition(), colorBtn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             palette.SetCurrentIndex(i);
         }
@@ -207,8 +207,8 @@ void Editor::DrawGUI() {
     DrawLine(BUTTON_PADDING, yPos, MENU_WIDTH - BUTTON_PADDING, yPos, GRAY);
     yPos += 10;
 
-    // === AKCIE ===
-    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "AKCIE");
+    // === ACTIONS ===
+    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "ACTIONS");
     yPos += 25;
 
     // Undo
@@ -238,8 +238,8 @@ void Editor::DrawGUI() {
     DrawLine(BUTTON_PADDING, yPos, MENU_WIDTH - BUTTON_PADDING, yPos, GRAY);
     yPos += 10;
 
-    // === SUBORY ===
-    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "SUBORY");
+    // === FILES ===
+    GuiLabel({(float)BUTTON_PADDING, (float)yPos, (float)(MENU_WIDTH - 2*BUTTON_PADDING), 20}, "FILES");
     yPos += 25;
 
     // Save PNG
@@ -270,7 +270,7 @@ void Editor::DrawGUI() {
 void Editor::HandleInput() {
     Vector2 mousePos = GetMousePosition();
 
-    // Klavesove skratky
+    // Keyboard shortcuts
     if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
         if (IsKeyPressed(KEY_Z)) {
             canvas->Undo();
@@ -287,13 +287,13 @@ void Editor::HandleInput() {
         }
     }
 
-    // Prepinanie nastrojov klavesami
+    // Switch tools with keys
     if (IsKeyPressed(KEY_ONE)) currentTool = Tool::PENCIL;
     if (IsKeyPressed(KEY_TWO)) currentTool = Tool::ERASER;
     if (IsKeyPressed(KEY_THREE)) currentTool = Tool::RECTANGLE;
     if (IsKeyPressed(KEY_FOUR)) currentTool = Tool::CIRCLE;
 
-    // Kreslenie
+    // Drawing
     if (IsMouseOnCanvas()) {
         Vector2 canvasPos = GetCanvasMousePos();
 
@@ -307,15 +307,15 @@ void Editor::HandleInput() {
             currentPos = canvasPos;
 
             if (currentTool == Tool::PENCIL) {
-                // Pencil kresli priebezne
+                // Pencil draws continuously
                 canvas->DrawPencilLine(lastPos, currentPos, palette.GetCurrentColor(), brushSize);
                 lastPos = currentPos;
             } else if (currentTool == Tool::ERASER) {
-                // Eraser kresli ciernou (farba pozadia)
+                // Eraser draws black (background color)
                 canvas->DrawPencilLine(lastPos, currentPos, BLACK, brushSize);
                 lastPos = currentPos;
             }
-            // Rectangle a Circle kreslia az pri pusteni tlacidla
+            // Rectangle and Circle draw on button release
         }
 
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing) {
@@ -336,7 +336,7 @@ void Editor::HandleInput() {
             }
         }
     } else {
-        // Ak mys opusti canvas pocas kreslenia
+        // If mouse leaves canvas during drawing
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDrawing) {
             isDrawing = false;
             if (currentTool == Tool::PENCIL || currentTool == Tool::ERASER) {
