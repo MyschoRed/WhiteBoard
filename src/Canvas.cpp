@@ -122,7 +122,6 @@ void Canvas::Undo() {
     // Restore previous state
     if (!undoStack.empty()) {
         Image prevImg = ImageCopy(undoStack.back());
-        ImageFlipVertical(&prevImg); // Flip for renderTexture
         Texture2D tempTex = LoadTextureFromImage(prevImg);
 
         BeginTextureMode(renderTexture);
@@ -154,7 +153,6 @@ void Canvas::Redo() {
     undoStack.push_back(ImageCopy(redoImg));
 
     // Restore state
-    ImageFlipVertical(&redoImg);
     Texture2D tempTex = LoadTextureFromImage(redoImg);
 
     BeginTextureMode(renderTexture);
