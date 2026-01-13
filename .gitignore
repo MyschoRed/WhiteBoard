@@ -1,0 +1,14 @@
+# Build directories
+cmake-build-*/
+build/
+
+# IDE
+.idea/
+
+# Compiled binaries
+*.o
+*.out
+WhiteBoard
+
+# Saved images
+*.png
